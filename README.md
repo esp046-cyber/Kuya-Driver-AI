@@ -10,3 +10,9 @@ Notes
 - screenshots/ are branded placeholders. Replace with real screenshots of the app for the install UI.
 - .well-known/assetlinks.json is a Play Store (TWA) template: set your package name and signing key fingerprint.
 - Set og:image to an absolute URL once you have your domain, since some crawlers ignore relative paths.
+
+v3 notes
+- Tabs: Maps & Biyahe, Car HUD, Calculators, Icons & Setup. The Builder was removed.
+- All paths are relative (./) so the app works at https://USER.github.io/REPO/.
+- Keep folder names lowercase: css, js, icons, images, screenshots. GitHub Pages is case-sensitive.
+- After deploying, iPhones may need one extra reload (or closing the tab) to pick up the new service worker.
