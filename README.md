@@ -21,3 +21,9 @@ v4 notes
 - Floating Google Maps pill removed; Google Maps buttons are inline in Car HUD.
 - Maps tab: destination, chips, Google Maps button and live estimate now sit at the top.
 - Service worker cache is kuya-driver-v4.
+
+v5 notes
+- Icons & Setup tab removed. The PNG icons stay in icons/ so the app is still installable. Theme and Install buttons are now in the header.
+- New 4th tab: Coding & SOS (number coding, RFID wallets, hotlines, LTO schedule, oil change tracker).
+- js/pwa-asset-generator.js was removed because nothing uses it anymore.
+- Service worker cache is kuya-driver-v5.
