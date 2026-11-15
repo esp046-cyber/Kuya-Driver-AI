@@ -34,17 +34,8 @@ function card(c,pinBtn=true){const el=document.createElement("section");el.class
  return el}
 // coding checker
 const CODE={1:[1,2],2:[3,4],3:[5,6],4:[7,8],5:[9,0]},DAYS=["Linggo","Lunes","Martes","Miyerkules","Huwebes","Biyernes","Sabado"];
-function coding(){const el=document.createElement("section");el.className="card";
- el.innerHTML=`<h3>Number coding (MMDA)</h3><label for="plate">Huling numero ng plaka</label><input id="plate" type="number" min="0" max="9" value="5"><div class="out" aria-live="polite"></div><p style="color:var(--mute);font-size:.82rem;margin:8px 0 0">Karaniwang window: 7–10 AM at 5–8 PM, Lunes–Biyernes. I-check ang MMDA para sa updates at exemptions.</p>`;
- const run=()=>{const p=parseInt($("#plate",el).value),d=Object.keys(CODE).find(k=>CODE[k].includes(p)),today=new Date().getDay(),no=today==d;
-  $(".out",el).innerHTML=isNaN(p)||p<0||p>9?"Maglagay ng 0–9":`<div><span>Coded tuwing</span><b>${DAYS[d]}</b></div><div class="status ${no?"no":"yes"}">${no?"Coded ka ngayon. Iwasan ang 7–10 AM at 5–8 PM.":"Hindi ka coded ngayon ("+DAYS[today]+")."}</div>`};
- el.addEventListener("input",run);run();return el}
-function logo(c,s,mask){const x=c.getContext("2d"),r=s/2;x.fillStyle="#0038A8";if(mask)x.fillRect(0,0,s,s);else{x.beginPath();x.roundRect(0,0,s,s,s*.22);x.fill()}
- const k=mask?.8:1;x.save();x.translate(r,r);x.scale(k,k);x.strokeStyle="#FCD116";x.lineWidth=s*.07;x.beginPath();x.arc(0,0,s*.3,0,7);x.stroke();
- x.fillStyle="#CE1126";x.beginPath();x.arc(0,0,s*.07,0,7);x.fill();x.strokeStyle="#FCD116";x.lineWidth=s*.05;[[0,-.3,0,-.07],[-.26,.15,-.06,.04],[.26,.15,.06,.04]].forEach(l=>{x.beginPath();x.moveTo(l[0]*s,l[1]*s);x.lineTo(l[2]*s,l[3]*s);x.stroke()});
- x.fillStyle="#FCD116";[[-.36,-.36],[.36,-.36],[0,.4]].forEach(p=>{x.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,d=i%2?s*.025:s*.06;x.lineTo(p[0]*s+Math.cos(a)*d,p[1]*s+Math.sin(a)*d)}x.fill()});x.restore()}
 // ===== v3: Maps & Biyahe, Car HUD, Calculators, Icons & Setup =====
-store.exp=(store.exp||[]).filter(x=>x&&typeof x=="object");
+store.exp=(store.exp||[]).filter(x=>x&&typeof x=="object");store.rfid=Object.assign({as:0,et:0},store.rfid);store.pms=Object.assign({odo:"",last:"",iv:5000},store.pms);
 const enc=encodeURIComponent,GM="https://www.google.com/maps/",geo=navigator.geolocation,
 hav=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742*Math.asin(Math.sqrt(x))},
 srch=q=>GM+"search/?api=1&query="+q,
@@ -64,7 +55,7 @@ V.maps=m=>{
  url=()=>{const s=g("st").value.trim();let u=GM+"dir/?api=1&destination="+enc(g("ds").value.trim())+"&travelmode=driving";if(s&&!/^current/i.test(s))u+="&origin="+enc(s);if(g("md").value=="free")u+="&avoid=tolls";return u},
  fill=()=>{const h=HUBS[g("ds").value.trim()];if(!h)return;const o=store.pos||{la:14.5547,lo:121.0244},fr=g("md").value=="free";g("dk").value=Math.max(1,Math.round(hav(o.la,o.lo,h[0],h[1])*1.35*(fr?1.15:1)));g("tl").value=fr?0:h[2]},
  est=()=>{const km=+g("dk").value||0,tl=+g("tl").value||0,k=+g("kl").value||10,p=+g("pr").value||0,gas=km/k*p,h=HUBS[g("ds").value.trim()],pv=g("pl").value;
-  store.kml=k;store.price=p;if(pv!=="")store.plate=+pv;save();
+  store.kml=k;store.price=p;if(pv!=="")store.plate=vd(+pv);store.dest=g("ds").value.trim();save();
   let w="",cls="yes";if(pv!==""&&+pv>=0&&+pv<=9){const n=new Date(),cd=Object.keys(CODE).find(x=>CODE[x].includes(+pv)),hr=n.getHours()+n.getMinutes()/60,win=(hr>=7&&hr<10)||(hr>=17&&hr<20);
    if(n.getDay()==cd){cls="no";w=win?"Coded ka NGAYON at nasa window ka na (Metro Manila).":"Coded ka ngayon. Bawal sa 7–10 AM at 5–8 PM (Metro Manila)."}else w="Hindi coded ngayon ("+DAYS[n.getDay()]+")."}
   g("es").innerHTML=`<div><span>Krudo, isang biyahe</span><b>${peso(gas)}</b></div><div><span>Krudo, balikan</span><b>${peso(gas*2)}</b></div><div><span>Toll${h&&g("md").value=="toll"?" ("+h[3]+")":""}, isang biyahe</span><b>${peso(tl)}</b></div><div class="main"><span>Kabuuan, balikan</span><b>${peso((gas+tl)*2)}</b></div>`+(w?`<div class="status ${cls}">${w}</div>`:"")+`<p class="note">Tantya lang ang layo at toll. I-edit ang mga numero kung iba ang ruta mo.</p>`;
@@ -102,22 +93,57 @@ V.hud=m=>{m.innerHTML=`<h2>Car HUD</h2><div class="two" style="margin-bottom:16p
  $i("ex").onclick=()=>{store.exp=[];save();expPaint();toast("Na-reset ang gastos")}};
 V.calc=m=>{m.innerHTML="<h2>Mga calculator</h2><div class='grid'></div>";const g=$(".grid",m),ids=["krudo","toll","sweldo","ambagan"];
  const AM={id:"ambagan",name:"Ambagan",f:[F_("total","Kabuuang bayarin",1500),F_("pax","Ilan ang maghahati",4,"num"),F_("tip","Tip (%)",10,"slider",0,30)],o:[["May tip","total*(1+tip/100)",1],["Bawat isa","total*(1+tip/100)/pax",2]]};
- ids.map(i=>i=="ambagan"?AM:PRE.find(c=>c.id==i)).forEach(c=>g.append(card(c,false)));const k=coding(),pi=$("#plate",k);if(store.plate!=null){pi.value=store.plate;pi.dispatchEvent(new Event("input",{bubbles:true}))}g.append(k)};
+ ids.map(i=>i=="ambagan"?AM:PRE.find(c=>c.id==i)).forEach(c=>g.append(card(c,false)))};
 function applyTheme(t){const r=document.documentElement;t=="light"||t=="dark"?r.dataset.theme=t:delete r.dataset.theme;const d=t=="dark"||(t!="light"&&matchMedia("(prefers-color-scheme:dark)").matches);document.querySelector("meta[name=theme-color]").content=d?"#0B0F19":"#0038A8"}
-V.setup=m=>{const ios=/iphone|ipad|ipod/i.test(navigator.userAgent),sa=matchMedia("(display-mode:standalone)").matches||navigator.standalone;
- m.innerHTML=`<h2>Icons at Setup</h2><div class="grid"><section class="card"><h3>I-install ang app</h3><p class="note" id="ih">${sa?"Naka-install na ang app.":ios?"Sa Safari: pindutin ang Share, tapos Add to Home Screen.":"Pindutin ang button para i-install."}</p><button class="gold" id="ib">I-install sa Home Screen</button></section>
- <section class="card"><h3>Theme</h3><select id="th" aria-label="Theme"><option value="auto">Sundan ang phone</option><option value="light">Maliwanag</option><option value="dark">Madilim</option></select></section>
- <section class="card"><h3>Status</h3><div class="out"><div><span>Internet</span><b style="font-size:1.1rem">${navigator.onLine?"Online":"Offline"}</b></div><div><span>Mode</span><b style="font-size:1.1rem">${sa?"Naka-install":"Browser"}</b></div></div><p class="note">Walang internet? Gumagana pa rin ang mga calculator mo. Kailangan ng internet ang Google Maps.</p></section></div>
- <h2>Icon at OG export</h2><p class="note">I-download ang buong icon set, maskable icons at og-image.</p><button class="gold" id="dl">I-download lahat</button><div class="thumbs" id="ig"></div>`;
- $i("th").value=store.theme||"auto";$i("th").onchange=e=>{store.theme=e.target.value;save();applyTheme(store.theme);toast("Napalitan ang theme")};
- $i("ib").onclick=()=>{if(window.dp){window.dp.prompt();window.dp=null}else toast(sa?"Naka-install na":ios?"Gamitin ang Share, tapos Add to Home Screen":"Hindi pa available ang install prompt")};
- $i("dl").onclick=()=>window.exportAll?exportAll(logo,toast):toast("Hindi na-load ang generator");
- const g=$i("ig");[[512,0],[192,0],[192,1],[180,0]].forEach(([s,mk])=>{const d=document.createElement("div"),c=document.createElement("canvas");d.className="thumb";c.width=c.height=s;logo(c,s,mk);d.append(c);d.insertAdjacentHTML("beforeend",`<span>${s}${mk?" mask":""}</span>`);g.append(d)})};
-function go(t){document.body.classList.toggle("car",t=="hud");const v=$i("view");v.innerHTML="";V[t](v);document.querySelectorAll("nav button").forEach(b=>b.dataset.t==t?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));scrollTo(0,0)}
+const vd=x=>Number.isInteger(x)&&x>=0&&x<=9?x:null,
+MONTHS=["October","January","February","March","April","May","June","July","August","September"],
+ORD=n=>n+(n%10==1&&n!=11?"st":n%10==2&&n!=12?"nd":n%10==3&&n!=13?"rd":"th");
+function ltoInfo(l,mid){if(l==null||mid==null)return null;const mn=l==0?10:l,last=new Date(new Date().getFullYear(),mn,0).getDate(),
+ wn=mid>=1&&mid<=3?1:mid>=4&&mid<=6?2:mid==7||mid==8?3:4,rg=[[1,7],[8,14],[15,21],[22,last]][wn-1];return{month:MONTHS[l],wn,range:ORD(rg[0])+"–"+ORD(rg[1])}}
+V.sos=m=>{const opt=s=>`<option value="">—</option>`+[0,1,2,3,4,5,6,7,8,9].map(i=>`<option value="${i}"${s===i?" selected":""}>${i}</option>`).join(""),
+ W=[["as","Autosweep","SLEX, Skyway, NAIAX, STAR, MCX"],["et","Easytrip","NLEX, SCTEX, TPLEX, CAVITEX, CALAX"]],P=store.pms,
+ call=(h,ic,l,n)=>`<a class="call" href="${h}"><span class="ic" aria-hidden="true">${ic}</span>${l}<b>${n}</b></a>`,
+ mp=(ic,l,q)=>`<a href="${srch(q)}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${ic}</span>${l}<small>Google Maps, malapit sa akin</small></a>`;
+ m.innerHTML=`<h2>Coding at SOS</h2>
+ <section class="card"><h3>Number coding (MMDA)</h3><div class="two"><div><label for="sl">Huling digit ng plaka</label><select id="sl">${opt(store.plate)}</select></div><div><label for="sm">Middle digit (ikalawa sa huli)</label><select id="sm">${opt(store.mid)}</select></div></div>
+ <div id="cb" aria-live="polite" style="margin-top:12px"></div><a id="cm" class="btn" target="_blank" rel="noopener">Buksan sa Google Maps</a>
+ <p class="note">Hindi awtomatikong iniiwasan ng Google Maps ang coding. Exempt ang mga expressway. Iwasan ang Makati at EDSA kapag coded ka. Walang coding kapag holiday.</p></section>
+ <h2>RFID Load Wallet</h2><section class="card"><label for="ta">Toll na ibabawas bawat tap (₱)</label><input id="ta" type="number" inputmode="decimal" min="0" step="any" value="${store.tollamt||100}">
+ <div class="two" style="margin-top:12px">${W.map(w=>`<div class="wal" data-w="${w[0]}"><b>${w[1]}</b><small class="note" style="display:block;margin:2px 0 8px">${w[2]}</small><label for="b_${w[0]}">Balance (₱)</label><input id="b_${w[0]}" type="number" inputmode="decimal" min="0" step="any" value="${store.rfid[w[0]]}"><div class="stack"><button data-a="500">+₱500 Reload</button><button data-a="1000">+₱1000 Reload</button><button class="ghost" data-a="toll">−Toll</button></div><div class="alert" hidden>Mababa na ang load! I-reload bago pumasok sa tollway.</div></div>`).join("")}</div></section>
+ <h2>Roadside SOS</h2><div class="sos">${call("tel:136","📞","MMDA Roadside Assistance","136")}${call("tel:911","🚨","National Emergency Hotline","911")}${call("tel:135000","🛣️","NLEX / SCTEX Hotline","1-35000")}${call("tel:0253188655","🛣️","Skyway / SLEX Hotline","(02) 5318-8655")}${mp("🔧","Pinakamalapit na 24/7 vulcanizing at auto shop","24/7+vulcanizing+auto+repair+shop+near+me")}${mp("🏥","Pinakamalapit na ospital / ER","hospital+emergency+room+near+me")}</div>
+ <h2>LTO Registration at PMS</h2><section class="card"><h3>Rehistro (LTO)</h3><div id="lt"></div><p class="note">Buwan = huling digit. Linggo = middle digit. Iba ang schedule ng ibang uri ng sasakyan, kaya i-check sa LTO.</p></section>
+ <section class="card" style="margin-top:12px"><h3>Change oil (PMS)</h3><div class="two"><div><label for="po">Odometer ngayon (km)</label><input id="po" type="number" inputmode="numeric" min="0" value="${P.odo}"></div><div><label for="pl2">Huling change oil (km)</label><input id="pl2" type="number" inputmode="numeric" min="0" value="${P.last}"></div></div>
+ <label for="pi2">Kada ilang km (interval)</label><input id="pi2" type="number" inputmode="numeric" min="1" value="${P.iv}"><div id="pm" aria-live="polite" style="margin-top:12px"></div></section>`;
+ const g=i=>m.querySelector("#"+i),
+ cb=()=>{const d=store.plate,n=new Date(),dow=n.getDay(),hr=n.getHours()+n.getMinutes()/60,bd=d==null?null:Object.keys(CODE).find(k=>CODE[k].includes(d)),ban=bd!=null&&dow==+bd,
+  inC=(hr>=7&&hr<10)||(hr>=17&&hr<20),inMk=hr>=7&&hr<19;let b;
+  if(d==null)b=`<div class="codeban">Piliin ang huling digit ng plaka mo</div>`;
+  else if(ban)b=`<div class="codeban no">🔴 CODING KA TODAY<small>Banned Day: ${DAYS[bd]}</small></div>`;
+  else b=`<div class="codeban yes">🟢 LIGTAS BUMiyahe Today<small>${dow==0||dow==6?"Walang coding tuwing weekend":"Hindi ka coded ngayon ("+DAYS[dow]+"). Coded ang plakang "+d+" tuwing "+DAYS[bd]+"."}</small></div>`;
+  b+=`<div class="out stk"><div><span>Metro Manila coding</span><b style="font-size:1rem">7–10 AM, 5–8 PM</b></div><div><span>Window hours</span><b style="font-size:1rem">10:01 AM–4:59 PM, 8:01 PM–6:59 AM</b></div><div><span>Makati</span><b style="font-size:1rem">7 AM–7 PM, walang window</b></div></div>`;
+  if(ban)b+=`<div class="status ${inC?"no":"yes"}">Metro Manila ngayon: ${inC?"BAWAL (coding hours)":"puwede (window hours)"}</div><div class="status ${inMk?"no":"yes"}">Makati ngayon: ${inMk?"BAWAL hanggang 7 PM":"puwede (labas ng oras)"}</div>`;
+  g("cb").innerHTML=b;g("cm").href=store.dest?GM+"dir/?api=1&destination="+enc(store.dest)+"&travelmode=driving":GM},
+ lt=()=>{const r=ltoInfo(store.plate,store.mid);g("lt").innerHTML=r?`<div class="out" style="margin-top:0"><div><span>Buwan</span><b style="font-size:1.2rem">${r.month}</b></div><div class="main"><span>Linggo ${r.wn}</span><b style="font-size:1.2rem">${r.range}</b></div></div>`:`<p class="note" style="margin:0">Piliin ang huling digit at middle digit ng plaka.</p>`},
+ wl=()=>m.querySelectorAll(".wal").forEach(w=>{const k=w.dataset.w;w.querySelector(".alert").hidden=!(store.rfid[k]<200);w.classList.toggle("low",store.rfid[k]<200)}),
+ pm=()=>{const o=+g("po").value,l=+g("pl2").value,iv=+g("pi2").value||5000,left=l+iv-o,pc=Math.max(0,Math.min(100,(o-l)/iv*100)),cl=left<=0?"red":left<=iv*.2?"gold":"";
+  g("pm").innerHTML=g("po").value===""||g("pl2").value===""?`<p class="note" style="margin:0">Ilagay ang odometer at huling change oil.</p>`:`<div class="bar ${cl}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pc)}"><i style="width:${pc}%"></i></div><div class="out" style="margin-top:8px"><div class="main"><span>${left<=0?"Lampas na! Magpa-change oil na":"Natitirang km"}</span><b style="font-size:1.4rem">${left<=0?Math.abs(left)+" km":left+" km"}</b></div><div><span>Susunod na change oil</span><b style="font-size:1.1rem">${l+iv} km</b></div></div>`;
+  store.pms={odo:g("po").value,last:g("pl2").value,iv:g("pi2").value||5000};save()};
+ m.addEventListener("change",e=>{if(e.target.id=="sl"||e.target.id=="sm"){store[e.target.id=="sl"?"plate":"mid"]=vd(e.target.value===""?NaN:+e.target.value);save();cb();lt()}});
+ m.addEventListener("input",e=>{const t=e.target;if(t.id=="ta"){store.tollamt=+t.value||0;save()}else if(t.id&&t.id.startsWith("b_")){store.rfid[t.id.slice(2)]=Math.max(0,+t.value||0);save();wl()}else if(["po","pl2","pi2"].includes(t.id))pm()});
+ m.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const k=b.closest(".wal").dataset.w,a=b.dataset.a=="toll"?-(store.tollamt||100):+b.dataset.a;store.rfid[k]=Math.max(0,Math.round((store.rfid[k]+a)*100)/100);save();g("b_"+k).value=store.rfid[k];wl();toast(a>0?"Nadagdagan ang load":"Nabawasan ang toll")});
+ cb();lt();wl();pm()};
+function go(t){document.body.classList.toggle("car",t=="hud");const o=$i("view"),v=o.cloneNode(false);o.replaceWith(v);V[t](v);document.querySelectorAll("nav button").forEach(b=>b.dataset.t==t?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));scrollTo(0,0)}
 document.querySelector("nav").onclick=e=>{const b=e.target.closest("button");if(b)go(b.dataset.t)};
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t=="dark":matchMedia("(prefers-color-scheme:dark)").matches},
+themeIcon=()=>{const d=isDark(),b=$i("themeBtn");b.textContent=d?"☀️":"🌙";b.setAttribute("aria-label",d?"Palitan sa maliwanag na theme":"Palitan sa madilim na theme")},
+sa=matchMedia("(display-mode:standalone)").matches||navigator.standalone;
+$i("themeBtn").onclick=()=>{store.theme=isDark()?"light":"dark";save();applyTheme(store.theme);themeIcon()};
+$i("installBtn").hidden=sa;
+$i("installBtn").onclick=()=>{if(window.dp){window.dp.prompt();window.dp=null}else toast(/iphone|ipad|ipod/i.test(navigator.userAgent)?"Sa Safari: pindutin ang Share, tapos Add to Home Screen":"Buksan ang menu ng browser at piliin ang Install app")};
+addEventListener("appinstalled",()=>{$i("installBtn").hidden=true});
 const nt=()=>{const o=navigator.onLine;$i("net").textContent=o?"Online":"Offline";if(!o)toast("Walang internet? Offline mode active. Gumagana pa rin ang mga calculator mo!")};addEventListener("online",nt);addEventListener("offline",nt);nt();
 addEventListener("beforeinstallprompt",e=>{e.preventDefault();window.dp=e});
-applyTheme(store.theme||"auto");go("maps");
+applyTheme(store.theme||"auto");themeIcon();go("maps");
 if("serviceWorker" in navigator&&location.protocol.startsWith("http")){const had=!!navigator.serviceWorker.controller;let rl=false;
  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(had&&!rl){rl=true;location.reload()}});
  addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}))}
