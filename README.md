@@ -16,3 +16,8 @@ v3 notes
 - All paths are relative (./) so the app works at https://USER.github.io/REPO/.
 - Keep folder names lowercase: css, js, icons, images, screenshots. GitHub Pages is case-sensitive.
 - After deploying, iPhones may need one extra reload (or closing the tab) to pick up the new service worker.
+
+v4 notes
+- Floating Google Maps pill removed; Google Maps buttons are inline in Car HUD.
+- Maps tab: destination, chips, Google Maps button and live estimate now sit at the top.
+- Service worker cache is kuya-driver-v4.
